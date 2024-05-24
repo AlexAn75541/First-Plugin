@@ -1,0 +1,13 @@
+main: dev.aretzera.first.first
+name: first
+version: 1.0.1
+api-version: '1.20'
+author: [Aretzera]
+commands:
+  first:
+    description: Gives a Legendary Sword
+    permission: first.give
+permissions:
+  myplugin.give:
+    description: Allows the use of the /first command
+    default: op
