@@ -1,60 +1,66 @@
 package dev.aretzera.first;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 
 public class first extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        // Register the command
-        getCommand("first").setExecutor(this);
-
         // Register the event listener
         getServer().getPluginManager().registerEvents(this, this);
-    }
-
-    private ItemStack createLegendarySword() {
-        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta meta = sword.getItemMeta();
-        meta.setDisplayName(ChatColor.GOLD + "Legendary Sword");
-        meta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);
-        meta.addEnchant(Enchantment.DURABILITY, 3, true);
-        meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
-        sword.setItemMeta(meta);
-        return sword;
+        getLogger().info("First plugin has been enabled.");
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("first")) {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                player.getInventory().addItem(createLegendarySword());
-                player.sendMessage(ChatColor.GREEN + "You received a Legendary Sword!");
-                return true;
-            } else {
-                sender.sendMessage(ChatColor.RED + "This command can only be executed by a player.");
-                return true;
-            }
-        }
-        return false;
+    public void onDisable() {
+        getLogger().info("First plugin has been disabled.");
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        player.getInventory().addItem(createLegendarySword());
-        player.sendMessage(ChatColor.GREEN + "Welcome to the server! You have received a Legendary Sword.");
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        ItemStack[] items = player.getInventory().getContents();
+
+        // Format the current date and time
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String timestamp = LocalDateTime.now().format(formatter);
+
+        // Prepare the death log message
+        StringBuilder logMessage = new StringBuilder();
+        logMessage.append("Player Death Log\n");
+        logMessage.append("Timestamp: ").append(timestamp).append("\n");
+        logMessage.append("Player: ").append(player.getName()).append("\n");
+        logMessage.append("Items: \n");
+
+        // Add the player's inventory items to the log message
+        for (ItemStack item : items) {
+            if (item != null) {
+                logMessage.append("- ").append(item.getType().name()).append(" x ").append(item.getAmount()).append("\n");
+            }
+        }
+
+        // Write the log message to a file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("death_log.txt", true))) {
+            writer.write(logMessage.toString());
+            writer.newLine();
+            writer.flush();
+            player.sendMessage(ChatColor.GREEN + "Your death has been logged.");
+        } catch (IOException e) {
+            player.sendMessage(ChatColor.RED + "Failed to log your death. Please contact the server administrator.");
+            getLogger().severe("Error writing to death_log.txt: " + e.getMessage());
+        }
     }
 }

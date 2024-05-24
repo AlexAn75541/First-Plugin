@@ -3,11 +3,13 @@ name: first
 version: 1.0.1
 api-version: '1.20'
 author: [Aretzera]
-commands:
-  first:
-    description: Gives a Legendary Sword
-    permission: first.give
 permissions:
-  myplugin.give:
-    description: Allows the use of the /first command
+  first.view:
+    description: Allows the user to view the death log
     default: op
+
+commands:
+  deathlog:
+    description: View the death log
+    usage: /deathlog
+    permission: first.view
